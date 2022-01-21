@@ -12,17 +12,14 @@ export const init = ({ root } = {}) => {
   function sketch(p) {
     // data / state
     let canvasWidth, canvasHeight, canvasCenterX, canvasCenterY, dropSoundFx
-    let ballX = null,
-      ballY = null,
-      speedX = 12,
-      speedY = 12,
-      ballRadius = 25
+    let ballPos = p.createVector(100, 100),
+      ballSpeed = p.createVector(10, 10),
+      ballRadius = 50
 
     // setup variables/flags
     let drewFirstFrame = false,
       canvasBgColor = '#fe934b55'
 
-    window.getCanvasDimensions = getCanvasDimensions
     function getCanvasDimensions() {
       const { windowWidth, windowHeight } = p
 
@@ -37,50 +34,63 @@ export const init = ({ root } = {}) => {
       canvasCenterX = canvasWidth / 2
       canvasCenterY = windowHeight / 2
 
-      // if (ballX == null || ballX > canvasWidth) {
-      //   ballX = canvasCenterX
+      // if (ballPos.x == null || ballPos.x > canvasWidth) {
+      //   ballPos.x = canvasCenterX
       // }
 
-      // if (ballY == null || ballY > canvasHeight) {
-      //   ballY = canvasCenterY
+      // if (ballPos.y == null || ballPos.y > canvasHeight) {
+      //   ballPos.y = canvasCenterY
       // }
 
       return [canvasWidth, canvasHeight]
     }
 
     function updateBallCoords() {
-      let leftOutOfBound = ballX - ballRadius < 0
-      let rightOutOfBound = ballX + ballRadius > canvasWidth
+      let leftOutOfBound = ballPos.x - ballRadius <= 0
+      let rightOutOfBound = ballPos.x + ballRadius >= canvasWidth
       if (leftOutOfBound) {
         // Reverse speed/direction
-        speedX = Math.abs(speedX)
-        // dropSoundFx.play()
+        ballSpeed.x = Math.abs(ballSpeed.x)
+        dropSoundFx.play()
       } else if (rightOutOfBound) {
-        speedX = Math.abs(speedX) * -1
-        // dropSoundFx.play()
+        ballSpeed.x = Math.abs(ballSpeed.x) * -1
+        dropSoundFx.play()
       }
 
-      let topOutOfBound = ballY - ballRadius < 0
-      let bottomOutOfBound = ballY + ballRadius > canvasHeight
+      let topOutOfBound = ballPos.y - ballRadius <= 0
+      let bottomOutOfBound = ballPos.y + ballRadius >= canvasHeight
       if (topOutOfBound) {
         // Reverse speed/direction
-        speedY = Math.abs(speedY)
-        // dropSoundFx.play()
+        ballSpeed.y = Math.abs(ballSpeed.y)
+        dropSoundFx.play()
       } else if (bottomOutOfBound) {
-        speedY = Math.abs(speedY) * -1
-        // dropSoundFx.play()
+        ballSpeed.y = Math.abs(ballSpeed.y) * -1
+        dropSoundFx.play()
       }
 
-      ballX += speedX
-      ballY += speedY
+      // ballPos.x += ballSpeed.x
+      // ballPos.y += ballSpeed.y
+      ballPos.add(ballSpeed)
+
+      // If out of screen - align it to the edge
+      ballPos.x = p.constrain(ballPos.x, ballRadius, canvasWidth - ballRadius)
+      ballPos.y = p.constrain(ballPos.y, ballRadius, canvasWidth - ballRadius)
+    }
+
+    function changeBallDirection() {
+      ballSpeed.rotate(p.random(0.5, p.TWO_PI))
     }
 
     p.setup = () => {
       p.createCanvas.apply(p, getCanvasDimensions())
       p.background(canvasBgColor)
 
-      ballX = p.random(ballRadius, canvasWidth - ballRadius)
-      ballY = p.random(ballRadius, canvasHeight - ballRadius)
+      ballPos = p.createVector(
+        p.random(ballRadius, canvasWidth - ballRadius),
+        p.random(ballRadius, canvasHeight - ballRadius)
+      )
+
+      changeBallDirection()
     }
 
     p.preload = () => {
@@ -98,16 +108,28 @@ export const init = ({ root } = {}) => {
       updateBallCoords()
 
       p.noStroke()
-      p.circle(ballX, ballY, ballRadius * 2)
+      p.circle(ballPos.x, ballPos.y, ballRadius * 2)
 
       p.fill('#ffffff')
     }
 
-    // p.mousePressed = () => {
-    //   let d = p.dist(p.mouseX, p.mouseY, 360, 200)
-    //   if (d < 100) {
-    //   }
-    // }
+    p.mousePressed = () => {
+      changeBallDirection()
+    }
+    p.keyPressed = () => {
+      let activeEl = document.activeElement
+      if (activeEl !== document.body && activeEl !== p.canvas) return
+
+      // Space or enter is pressed
+      if (p.keyIsDown(32) || p.keyIsDown(13)) {
+        changeBallDirection()
+      }
+    }
+
+    p.mouseWheel = e => {
+      let scrolledUp = e.deltaY < 0
+      ballSpeed.mult(scrolledUp ? 0.95 : 1.05)
+    }
   }
 
   return new window.p5(sketch, root)
