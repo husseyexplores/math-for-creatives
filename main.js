@@ -5,7 +5,7 @@ const e = {
   app: document.getElementById('app'),
 }
 let state = {
-  currentProject: null,
+  currentProject: { name: null, instance: null },
 }
 
 const PROJECTS = new Map([
@@ -16,10 +16,10 @@ const PROJECTS_ARR = [...PROJECTS.entries()]
 const loadProject = project => {
   console.log('Load :', project)
 
-  if (state.currentProject === project) {
+  if (state.currentProject.name === project) {
     console.log('The project is already loaded - Reinitializing project')
   } else {
-    state.currentProject = project
+    state.currentProject.name = project
   }
 
   let [fetchModule, args] = PROJECTS.get(project) || []
@@ -28,8 +28,11 @@ const loadProject = project => {
     return Promise.reject(new Error(`Couldn't find the project "${project}"`))
 
   return fetchModule.call(null).then(module => {
-    e.app.innerHTML = ''
-    module.init(args)
+    state.currentProject.instance?.remove?.()
+    // e.app.innerHTML = ''
+    let instance = module.init(args)
+    state.currentProject.instance = instance
+    return instance
   })
 }
 
@@ -53,7 +56,7 @@ PROJECTS.forEach((value, project) => {
 })
 
 // Load first project initially
-if (!state.currentProject && PROJECTS_ARR.length > 0) {
+if (!state.currentProject.name && PROJECTS_ARR.length > 0) {
   const [project] = PROJECTS_ARR[0]
   loadProject(project)
 }
