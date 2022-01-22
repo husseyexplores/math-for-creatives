@@ -10,6 +10,7 @@ let state = {
 
 const PROJECTS = new Map([
   ['Wall Ball', [() => import('./src/wall-ball.js'), { root: e.app }]],
+  ['Flower Brush', [() => import('./src/flower-brush.js'), { root: e.app }]],
 ])
 const PROJECTS_ARR = [...PROJECTS.entries()]
 
@@ -57,6 +58,6 @@ PROJECTS.forEach((value, project) => {
 
 // Load first project initially
 if (!state.currentProject.name && PROJECTS_ARR.length > 0) {
-  const [project] = PROJECTS_ARR[0]
+  const [project] = PROJECTS_ARR[1]
   loadProject(project)
 }
